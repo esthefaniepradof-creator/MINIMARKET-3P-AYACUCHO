@@ -1,0 +1,97 @@
+{
+  "campaigns": [
+    {
+      "id": 1,
+      "name": "Lanzamiento Producto",
+      "description": "Campaña principal",
+      "budget": 3000,
+      "status": "Activa"
+    },
+    {
+      "id": 2,
+      "name": "Black Friday",
+      "description": "Promoción",
+      "budget": 5000,
+      "status": "Planificada"
+    },
+    {
+      "id": 3,
+      "name": "Marca Corporativa",
+      "description": "Branding",
+      "budget": 2000,
+      "status": "Activa"
+    }
+  ],
+  "contents": [
+    {
+      "id": 101,
+      "title": "Video Lanzamiento",
+      "description": "Demo",
+      "campaign": "Lanzamiento Producto",
+      "date": "2026-06-02",
+      "time": "10:00",
+      "platform": "Instagram",
+      "status": "Programado",
+      "reach": 1200,
+      "interactions": 240,
+      "conversions": 15,
+      "roi": 120
+    },
+    {
+      "id": 102,
+      "title": "Promo Especial",
+      "description": "Oferta",
+      "campaign": "Black Friday",
+      "date": "2026-06-04",
+      "time": "14:00",
+      "platform": "Facebook",
+      "status": "Programado",
+      "reach": 1800,
+      "interactions": 420,
+      "conversions": 32,
+      "roi": 180
+    },
+    {
+      "id": 103,
+      "title": "Contenido Branding",
+      "description": "Corporativo",
+      "campaign": "Marca Corporativa",
+      "date": "2026-05-30",
+      "time": "09:00",
+      "platform": "LinkedIn",
+      "status": "Publicado",
+      "reach": 900,
+      "interactions": 150,
+      "conversions": 8,
+      "roi": 95
+    },
+    {
+      "id": 104,
+      "title": "Reel Promocional",
+      "description": "Reel",
+      "campaign": "Lanzamiento Producto",
+      "date": "2026-06-06",
+      "time": "18:00",
+      "platform": "TikTok",
+      "status": "Programado",
+      "reach": 2500,
+      "interactions": 600,
+      "conversions": 45,
+      "roi": 230
+    },
+    {
+      "id": 1780344787187,
+      "title": "vamos a mimir",
+      "description": "kldsnfkdsgfdsfgdsdfdsf",
+      "campaign": "Lanzamiento Producto",
+      "date": "2026-06-01",
+      "time": "16:00",
+      "platform": "Facebook",
+      "status": "Programado",
+      "reach": 100,
+      "interactions": 100,
+      "conversions": 100,
+      "roi": 100
+    }
+  ]
+}

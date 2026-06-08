@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marketing Content Manager</title>
+
+<style>
+
+:root{
+--bg:#f4f7fb;
+--card:#ffffff;
+--primary:#4f46e5;
+--secondary:#7c3aed;
+--text:#1f2937;
+--border:#e5e7eb;
+--success:#10b981;
+--danger:#ef4444;
+--warning:#f59e0b;
+}
+
+.dark{
+--bg:#111827;
+--card:#1f2937;
+--text:#f9fafb;
+--border:#374151;
+}
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Segoe UI,Tahoma,sans-serif;
+}
+
+body{
+background:var(--bg);
+color:var(--text);
+display:flex;
+height:100vh;
+overflow:hidden;
+}
+
+.sidebar{
+width:250px;
+background:linear-gradient(180deg,var(--primary),var(--secondary));
+color:white;
+padding:20px;
+display:flex;
+flex-direction:column;
+gap:10px;
+}
+
+.logo{
+font-size:22px;
+font-weight:bold;
+margin-bottom:20px;
+}
+
+.menu button{
+width:100%;
+padding:12px;
+margin-bottom:8px;
+border:none;
+border-radius:10px;
+cursor:pointer;
+background:rgba(255,255,255,.15);
+color:white;
+}
+
+.main{
+flex:1;
+overflow:auto;
+padding:20px;
+}
+
+.topbar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
+}
+
+.card{
+background:var(--card);
+border-radius:14px;
+padding:15px;
+box-shadow:0 3px 10px rgba(0,0,0,.08);
+margin-bottom:20px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+gap:15px;
+}
+
+.stat{
+text-align:center;
+}
+
+.stat h2{
+color:var(--primary);
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th,td{
+padding:10px;
+border-bottom:1px solid var(--border);
+text-align:left;
+}
+
+input,select,textarea{
+width:100%;
+padding:10px;
+border:1px solid var(--border);
+border-radius:8px;
+background:var(--card);
+color:var(--text);
+}
+
+button.primary{
+background:var(--primary);
+color:white;
+border:none;
+padding:10px 15px;
+border-radius:8px;
+cursor:pointer;
+}
+
+button.danger{
+background:var(--danger);
+color:white;
+border:none;
+padding:8px;
+border-radius:8px;
+cursor:pointer;
+}
+
+button.success{
+background:var(--success);
+color:white;
+border:none;
+padding:8px;
+border-radius:8px;
+cursor:pointer;
+}
+
+.hidden{
+display:none;
+}
+
+.calendar{
+display:grid;
+grid-template-columns:repeat(7,1fr);
+gap:5px;
+}
+
+.day{
+background:var(--card);
+padding:10px;
+border-radius:8px;
+min-height:90px;
+cursor:pointer;
+border:1px solid var(--border);
+}
+
+.today{
+border:2px solid var(--primary);
+}
+
+.badge{
+display:inline-block;
+padding:2px 6px;
+font-size:11px;
+border-radius:6px;
+background:var(--primary);
+color:white;
+margin-top:4px;
+}
+
+.modal{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.5);
+display:none;
+justify-content:center;
+align-items:center;
+z-index:999;
+}
+
+.modal-content{
+width:90%;
+max-width:600px;
+background:var(--card);
+padding:20px;
+border-radius:15px;
+max-height:90vh;
+overflow:auto;
+}
+
+.toast{
+position:fixed;
+bottom:20px;
+right:20px;
+background:var(--success);
+color:white;
+padding:12px 20px;
+border-radius:10px;
+display:none;
+z-index:9999;
+}
+
+canvas{
+width:100%;
+height:300px;
+background:var(--card);
+border-radius:10px;
+}
+
+@media(max-width:768px){
+body{
+flex-direction:column;
+}
+.sidebar{
+width:100%;
+}
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+<div class="logo">Marketing SaaS</div>
+
+<div class="menu">
+<button onclick="showView('dashboard')">Dashboard</button>
+<button onclick="showView('campaigns')">Campañas</button>
+<button onclick="showView('calendarView')">Calendario</button>
+<button onclick="showView('contentView')">Contenidos</button>
+<button onclick="toggleDark()">Modo Oscuro</button>
+</div>
+</div>
+
+<div class="main">
+
+<div class="topbar">
+<h1>Marketing Content Manager</h1>
+
+<div style="display:flex;gap:10px;">
+<input id="globalSearch" placeholder="Buscar...">
+<button class="primary" onclick="exportJSON()">Exportar JSON</button>
+<input type="file" id="importFile" hidden>
+<button class="success" onclick="document.getElementById('importFile').click()">Importar</button>
+</div>
+</div>
+
+<!-- DASHBOARD -->
+
+<div id="dashboard">
+
+<div class="grid">
+
+<div class="card stat">
+<h2 id="totalCampaigns">0</h2>
+<p>Campañas</p>
+</div>
+
+<div class="card stat">
+<h2 id="activeCampaigns">0</h2>
+<p>Activas</p>
+</div>
+
+<div class="card stat">
+<h2 id="totalPosts">0</h2>
+<p>Publicaciones</p>
+</div>
+
+<div class="card stat">
+<h2 id="publishedPosts">0</h2>
+<p>Publicadas</p>
+</div>
+
+</div>
+
+<div class="card">
+<h3>Rendimiento por Plataforma</h3>
+<canvas id="chart" width="800" height="300"></canvas>
+</div>
+
+<div class="card">
+<h3>Top Contenidos</h3>
+
+<table>
+<thead>
+<tr>
+<th>Título</th>
+<th>Plataforma</th>
+<th>ROI</th>
+</tr>
+</thead>
+
+<tbody id="rankingTable"></tbody>
+
+</table>
+</div>
+
+</div>
+
+<!-- CAMPAÑAS -->
+
+<div id="campaigns" class="hidden">
+
+<div class="card">
+
+<h2>Campañas</h2>
+
+<br>
+
+<button class="primary" onclick="openCampaignModal()">Nueva Campaña</button>
+
+<br><br>
+
+<table>
+
+<thead>
+<tr>
+<th>Nombre</th>
+<th>Estado</th>
+<th>Presupuesto</th>
+<th>Acciones</th>
+</tr>
+</thead>
+
+<tbody id="campaignTable"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<!-- CALENDARIO -->
+
+<div id="calendarView" class="hidden">
+
+<div class="card">
+
+<div style="display:flex;justify-content:space-between;align-items:center;">
+<button onclick="prevMonth()">◀</button>
+
+<h2 id="monthTitle"></h2>
+
+<button onclick="nextMonth()">▶</button>
+</div>
+
+<br>
+
+<div class="calendar" id="calendar"></div>
+
+</div>
+
+</div>
+
+<!-- CONTENIDOS -->
+
+<div id="contentView" class="hidden">
+
+<div class="card">
+
+<h2>Contenidos</h2>
+
+<br>
+
+<button class="primary" onclick="openContentModal()">Nuevo Contenido</button>
+
+<br><br>
+
+<table>
+
+<thead>
+<tr>
+<th>Título</th>
+<th>Fecha</th>
+<th>Plataforma</th>
+<th>Estado</th>
+<th>Acciones</th>
+</tr>
+</thead>
+
+<tbody id="contentTable"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<!-- MODAL CAMPAÑA -->
+
+<div class="modal" id="campaignModal">
+<div class="modal-content">
+
+<h2>Campaña</h2>
+
+<input id="campName" placeholder="Nombre">
+<br><br>
+
+<textarea id="campDesc" placeholder="Descripción"></textarea>
+
+<br><br>
+
+<input id="campBudget" type="number" placeholder="Presupuesto">
+
+<br><br>
+
+<select id="campStatus">
+<option>Planificada</option>
+<option>Activa</option>
+<option>Pausada</option>
+<option>Finalizada</option>
+</select>
+
+<br><br>
+
+<button class="success" onclick="saveCampaign()">Guardar</button>
+<button onclick="closeModal('campaignModal')">Cerrar</button>
+
+</div>
+</div>
+
+<!-- MODAL CONTENIDO -->
+
+<div class="modal" id="contentModal">
+<div class="modal-content">
+
+<h2>Contenido</h2>
+
+<input id="contentTitle" placeholder="Título">
+<br><br>
+
+<textarea id="contentDesc" placeholder="Descripción"></textarea>
+
+<br><br>
+
+<select id="contentCampaign"></select>
+
+<br><br>
+
+<input id="contentDate" type="date">
+
+<br><br>
+
+<input id="contentTime" type="time">
+
+<br><br>
+
+<select id="contentPlatform">
+<option>Facebook</option>
+<option>Instagram</option>
+<option>TikTok</option>
+<option>LinkedIn</option>
+<option>X</option>
+<option>YouTube</option>
+<option>WhatsApp</option>
+<option>Google Business</option>
+</select>
+
+<br><br>
+
+<select id="contentStatus">
+<option>Borrador</option>
+<option>Programado</option>
+<option>Publicado</option>
+<option>Cancelado</option>
+</select>
+
+<br><br>
+
+<input id="contentReach" type="number" placeholder="Alcance">
+
+<br><br>
+
+<input id="contentInteractions" type="number" placeholder="Interacciones">
+
+<br><br>
+
+<input id="contentConversions" type="number" placeholder="Conversiones">
+
+<br><br>
+
+<input id="contentROI" type="number" placeholder="ROI %">
+
+<br><br>
+
+<button class="success" onclick="saveContent()">Guardar</button>
+<button onclick="closeModal('contentModal')">Cerrar</button>
+
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+
+let campaigns =
+JSON.parse(localStorage.getItem("campaigns")) || [];
+
+let contents =
+JSON.parse(localStorage.getItem("contents")) || [];
+
+let editingCampaign = null;
+let editingContent = null;
+
+let currentMonth = new Date().getMonth();
+let currentYear = new Date().getFullYear();
+
+function saveStorage(){
+localStorage.setItem("campaigns",JSON.stringify(campaigns));
+localStorage.setItem("contents",JSON.stringify(contents));
+}
+
+function toast(msg){
+const t=document.getElementById("toast");
+t.innerText=msg;
+t.style.display="block";
+setTimeout(()=>t.style.display="none",2500);
+}
+
+function showView(id){
+
+["dashboard","campaigns","calendarView","contentView"]
+.forEach(v=>{
+document.getElementById(v).classList.add("hidden");
+});
+
+document.getElementById(id)
+.classList.remove("hidden");
+
+renderDashboard();
+}
+
+function toggleDark(){
+document.body.classList.toggle("dark");
+}
+
+function closeModal(id){
+document.getElementById(id).style.display="none";
+}
+
+function openCampaignModal(c=null){
+
+editingCampaign=c;
+
+document.getElementById("campaignModal")
+.style.display="flex";
+
+if(c){
+campName.value=c.name;
+campDesc.value=c.description;
+campBudget.value=c.budget;
+campStatus.value=c.status;
+}else{
+campName.value="";
+campDesc.value="";
+campBudget.value="";
+campStatus.value="Planificada";
+}
+}
+
+function saveCampaign(){
+
+const data={
+id:editingCampaign?.id || Date.now(),
+name:campName.value,
+description:campDesc.value,
+budget:Number(campBudget.value),
+status:campStatus.value
+};
+
+if(editingCampaign){
+campaigns=
+campaigns.map(c=>c.id===data.id?data:c);
+}else{
+campaigns.push(data);
+}
+
+saveStorage();
+renderCampaigns();
+loadCampaignOptions();
+
+closeModal("campaignModal");
+
+toast("Campaña guardada");
+}
+
+function deleteCampaign(id){
+
+if(!confirm("¿Eliminar campaña?")) return;
+
+campaigns=
+campaigns.filter(c=>c.id!==id);
+
+saveStorage();
+renderCampaigns();
+renderDashboard();
+
+toast("Campaña eliminada");
+}
+
+function duplicateCampaign(id){
+
+const original=
+campaigns.find(c=>c.id===id);
+
+const copy={
+...original,
+id:Date.now(),
+name:original.name+" (Copia)"
+};
+
+campaigns.push(copy);
+
+saveStorage();
+renderCampaigns();
+
+toast("Campaña duplicada");
+}
+
+function renderCampaigns(){
+
+campaignTable.innerHTML="";
+
+campaigns.forEach(c=>{
+
+campaignTable.innerHTML+=`
+<tr>
+<td>${c.name}</td>
+<td>${c.status}</td>
+<td>$${c.budget}</td>
+
+<td>
+
+<button onclick="openCampaignModal(${JSON.stringify(c).replace(/"/g,'&quot;')})">
+Editar
+</button>
+
+<button onclick="duplicateCampaign(${c.id})">
+Duplicar
+</button>
+
+<button class="danger"
+onclick="deleteCampaign(${c.id})">
+Eliminar
+</button>
+
+</td>
+</tr>
+`;
+
+});
+
+}
+
+function loadCampaignOptions(){
+
+contentCampaign.innerHTML="";
+
+campaigns.forEach(c=>{
+
+contentCampaign.innerHTML+=`
+<option value="${c.name}">
+${c.name}
+</option>
+`;
+
+});
+
+}
+
+function openContentModal(item=null){
+
+editingContent=item;
+
+document.getElementById("contentModal")
+.style.display="flex";
+
+if(item){
+
+contentTitle.value=item.title;
+contentDesc.value=item.description;
+contentCampaign.value=item.campaign;
+contentDate.value=item.date;
+contentTime.value=item.time;
+contentPlatform.value=item.platform;
+contentStatus.value=item.status;
+contentReach.value=item.reach;
+contentInteractions.value=item.interactions;
+contentConversions.value=item.conversions;
+contentROI.value=item.roi;
+
+}else{
+
+contentTitle.value="";
+contentDesc.value="";
+contentDate.value="";
+contentTime.value="";
+contentReach.value=0;
+contentInteractions.value=0;
+contentConversions.value=0;
+contentROI.value=0;
+
+}
+
+}
+
+function saveContent(){
+
+const obj={
+
+id:editingContent?.id || Date.now(),
+
+title:contentTitle.value,
+
+description:contentDesc.value,
+
+campaign:contentCampaign.value,
+
+date:contentDate.value,
+
+time:contentTime.value,
+
+platform:contentPlatform.value,
+
+status:contentStatus.value,
+
+reach:Number(contentReach.value),
+
+interactions:Number(contentInteractions.value),
+
+conversions:Number(contentConversions.value),
+
+roi:Number(contentROI.value)
+
+};
+
+if(editingContent){
+
+contents=
+contents.map(c=>c.id===obj.id?obj:c);
+
+}else{
+
+contents.push(obj);
+
+}
+
+saveStorage();
+
+renderContents();
+renderCalendar();
+renderDashboard();
+
+closeModal("contentModal");
+
+toast("Contenido guardado");
+
+}
+
+function deleteContent(id){
+
+if(!confirm("¿Eliminar contenido?")) return;
+
+contents=
+contents.filter(c=>c.id!==id);
+
+saveStorage();
+
+renderContents();
+renderCalendar();
+renderDashboard();
+
+toast("Contenido eliminado");
+}
+
+function duplicateContent(id){
+
+const item=
+contents.find(x=>x.id===id);
+
+contents.push({
+...item,
+id:Date.now(),
+title:item.title+" (Copia)"
+});
+
+saveStorage();
+
+renderContents();
+
+toast("Contenido duplicado");
+}
+
+function renderContents(){
+
+contentTable.innerHTML="";
+
+contents.forEach(c=>{
+
+contentTable.innerHTML+=`
+<tr>
+
+<td>${c.title}</td>
+
+<td>${c.date}</td>
+
+<td>${c.platform}</td>
+
+<td>${c.status}</td>
+
+<td>
+
+<button onclick="openContentModal(${JSON.stringify(c).replace(/"/g,'&quot;')})">
+Editar
+</button>
+
+<button onclick="duplicateContent(${c.id})">
+Duplicar
+</button>
+
+<button class="danger"
+onclick="deleteContent(${c.id})">
+Eliminar
+</button>
+
+</td>
+
+</tr>
+`;
+
+});
+
+}
+
+
+function renderCalendar(){
+
+const calendar =
+document.getElementById("calendar");
+
+calendar.innerHTML="";
+
+const firstDay =
+new Date(currentYear,currentMonth,1);
+
+const lastDay =
+new Date(currentYear,currentMonth+1,0);
+
+monthTitle.innerText=
+firstDay.toLocaleString("es",{
+month:"long"
+})+" "+currentYear;
+
+for(let i=1;i<=lastDay.getDate();i++){
+
+const dateString=
+`${currentYear}-${String(currentMonth+1).padStart(2,"0")}-${String(i).padStart(2,"0")}`;
+
+const day=document.createElement("div");
+
+day.className="day";
+
+const today=new Date();
+
+if(
+today.getDate()===i &&
+today.getMonth()===currentMonth &&
+today.getFullYear()===currentYear
+){
+day.classList.add("today");
+}
+
+const count=
+contents.filter(c=>c.date===dateString).length;
+
+day.innerHTML=`
+<strong>${i}</strong>
+${count>0 ? `<div class="badge">${count} publicaciones</div>` : ""}
+`;
+
+day.onclick=()=>showDayPosts(dateString);
+
+calendar.appendChild(day);
+
+}
+
+}
+
+function showDayPosts(date){
+
+const posts=
+contents.filter(c=>c.date===date);
+
+let html=`Publicaciones del ${date}\n\n`;
+
+if(posts.length===0){
+html+="No hay publicaciones programadas.";
+}else{
+
+posts.forEach(p=>{
+html+=`
+• ${p.time || "--:--"} | ${p.platform}
+${p.title}
+Estado: ${p.status}
+
+`;
+});
+
+}
+
+alert(html);
+
+}
+
+function prevMonth(){
+
+currentMonth--;
+
+if(currentMonth<0){
+currentMonth=11;
+currentYear--;
+}
+
+renderCalendar();
+
+}
+
+function nextMonth(){
+
+currentMonth++;
+
+if(currentMonth>11){
+currentMonth=0;
+currentYear++;
+}
+
+renderCalendar();
+
+}
+
+function renderDashboard(){
+
+document.getElementById("totalCampaigns")
+.innerText=campaigns.length;
+
+document.getElementById("activeCampaigns")
+.innerText=
+campaigns.filter(
+c=>c.status==="Activa"
+).length;
+
+document.getElementById("totalPosts")
+.innerText=
+contents.length;
+
+document.getElementById("publishedPosts")
+.innerText=
+contents.filter(
+c=>c.status==="Publicado"
+).length;
+
+renderRanking();
+drawChart();
+
+}
+
+function renderRanking(){
+
+const table=
+document.getElementById("rankingTable");
+
+table.innerHTML="";
+
+const ranking=
+[...contents]
+.sort((a,b)=>b.roi-a.roi)
+.slice(0,10);
+
+ranking.forEach(item=>{
+
+table.innerHTML+=`
+<tr>
+<td>${item.title}</td>
+<td>${item.platform}</td>
+<td>${item.roi}%</td>
+</tr>
+`;
+
+});
+
+}
+
+function drawChart(){
+
+const canvas=
+document.getElementById("chart");
+
+const ctx=
+canvas.getContext("2d");
+
+ctx.clearRect(
+0,
+0,
+canvas.width,
+canvas.height
+);
+
+const platforms=[
+"Facebook",
+"Instagram",
+"TikTok",
+"LinkedIn",
+"X",
+"YouTube"
+];
+
+const values=
+platforms.map(platform=>{
+
+return contents
+.filter(c=>c.platform===platform)
+.reduce(
+(sum,item)=>
+sum+item.interactions,
+0
+);
+
+});
+
+const max=
+Math.max(...values,1);
+
+const barWidth=80;
+
+values.forEach((value,index)=>{
+
+const height=
+(value/max)*220;
+
+const x=
+50 + index*120;
+
+const y=
+260-height;
+
+ctx.fillStyle="#4f46e5";
+
+ctx.fillRect(
+x,
+y,
+barWidth,
+height
+);
+
+ctx.fillStyle="#111";
+
+ctx.font="12px Arial";
+
+ctx.fillText(
+platforms[index],
+x,
+290
+);
+
+ctx.fillText(
+value,
+x+20,
+y-10
+);
+
+});
+
+}
+
+function exportJSON(){
+
+const data={
+campaigns,
+contents
+};
+
+const blob=
+new Blob(
+[
+JSON.stringify(
+data,
+null,
+2
+)
+],
+{
+type:"application/json"
+}
+);
+
+const a=
+document.createElement("a");
+
+a.href=
+URL.createObjectURL(blob);
+
+a.download=
+"marketing-backup.json";
+
+a.click();
+
+toast("Archivo exportado");
+
+}
+
+document
+.getElementById("importFile")
+.addEventListener(
+"change",
+function(e){
+
+const file=
+e.target.files[0];
+
+if(!file) return;
+
+const reader=
+new FileReader();
+
+reader.onload=function(){
+
+try{
+
+const data=
+JSON.parse(reader.result);
+
+campaigns=
+data.campaigns || [];
+
+contents=
+data.contents || [];
+
+saveStorage();
+
+renderCampaigns();
+renderContents();
+renderCalendar();
+renderDashboard();
+loadCampaignOptions();
+
+toast("Datos importados");
+
+}catch(err){
+
+alert(
+"Archivo JSON inválido"
+);
+
+}
+
+};
+
+reader.readAsText(file);
+
+}
+);
+
+document
+.getElementById("globalSearch")
+.addEventListener(
+"keyup",
+function(){
+
+const term=
+this.value.toLowerCase();
+
+document
+.querySelectorAll("tbody tr")
+.forEach(row=>{
+
+row.style.display=
+row.innerText
+.toLowerCase()
+.includes(term)
+?
+""
+:
+"none";
+
+});
+
+}
+);
+
+function createDemoData(){
+
+if(
+localStorage.getItem("demoLoaded")
+)
+return;
+
+campaigns=[
+
+{
+id:1,
+name:"Lanzamiento Producto",
+description:"Campaña principal",
+budget:3000,
+status:"Activa"
+},
+
+{
+id:2,
+name:"Black Friday",
+description:"Promoción",
+budget:5000,
+status:"Planificada"
+},
+
+{
+id:3,
+name:"Marca Corporativa",
+description:"Branding",
+budget:2000,
+status:"Activa"
+}
+
+];
+
+const today=
+new Date();
+
+const formatDate=(offset)=>{
+
+const d=
+new Date();
+
+d.setDate(
+today.getDate()+offset
+);
+
+return d
+.toISOString()
+.split("T")[0];
+
+};
+
+contents=[
+
+{
+id:101,
+title:"Video Lanzamiento",
+description:"Demo",
+campaign:"Lanzamiento Producto",
+date:formatDate(1),
+time:"10:00",
+platform:"Instagram",
+status:"Programado",
+reach:1200,
+interactions:240,
+conversions:15,
+roi:120
+},
+
+{
+id:102,
+title:"Promo Especial",
+description:"Oferta",
+campaign:"Black Friday",
+date:formatDate(3),
+time:"14:00",
+platform:"Facebook",
+status:"Programado",
+reach:1800,
+interactions:420,
+conversions:32,
+roi:180
+},
+
+{
+id:103,
+title:"Contenido Branding",
+description:"Corporativo",
+campaign:"Marca Corporativa",
+date:formatDate(-2),
+time:"09:00",
+platform:"LinkedIn",
+status:"Publicado",
+reach:900,
+interactions:150,
+conversions:8,
+roi:95
+},
+
+{
+id:104,
+title:"Reel Promocional",
+description:"Reel",
+campaign:"Lanzamiento Producto",
+date:formatDate(5),
+time:"18:00",
+platform:"TikTok",
+status:"Programado",
+reach:2500,
+interactions:600,
+conversions:45,
+roi:230
+}
+
+];
+
+saveStorage();
+
+localStorage.setItem(
+"demoLoaded",
+"true"
+);
+
+}
+
+createDemoData();
+
+loadCampaignOptions();
+
+renderCampaigns();
+
+renderContents();
+
+renderCalendar();
+
+renderDashboard();
+
+showView("dashboard");
+
+</script>
+
+</body>
+</html>
