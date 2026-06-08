@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planner Pro - Calendario de Marketing</title>
+    <style>
+        :root {
+            --bg-main: #121824;
+            --bg-card: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --success: #10b981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            padding: 20px;
+            display: flex;
+            gap: 20px;
+            height: 100vh;
+        }
+
+        /* Lateral - Campañas */
+        aside {
+            width: 300px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        h2 {
+            font-size: 1.2rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        input, select, textarea {
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary);
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: var(--primary-hover);
+        }
+
+        .campaign-list {
+            list-style: none;
+            overflow-y: auto;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .campaign-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            background: #0f172a;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+        }
+
+        .campaign-item.active {
+            border-color: var(--primary);
+        }
+
+        .color-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        /* Contenedor Principal Calendario */
+        main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .grid-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            font-weight: bold;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .grid-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            grid-auto-rows: minmax(100px, 1fr);
+            gap: 5px;
+            flex-grow: 1;
+            background: var(--border-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .day-cell {
+            background: #0f172a;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+            overflow-y: auto;
+        }
+
+        .day-cell:hover {
+            background: #1e293b;
+        }
+
+        .day-cell.empty {
+            background: #121824;
+            cursor: default;
+        }
+
+        .day-number {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--text-muted);
+        }
+
+        .day-cell.today .day-number {
+            color: var(--primary);
+            background: rgba(59, 130, 246, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            width: fit-content;
+        }
+
+        /* Tarjetas de Publicación dentro del día */
+        .post-badge {
+            font-size: 0.75rem;
+            padding: 4px 6px;
+            border-radius: 4px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .post-time {
+            font-weight: bold;
+            font-size: 0.7rem;
+            opacity: 0.9;
+        }
+
+        .post-title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Modal / Formulario Flotante */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.2s, visibility 0.2s;
+            z-index: 100;
+        }
+
+        .modal-overlay.open {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 25px;
+            border-radius: 12px;
+            width: 450px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .networks-checkboxes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .net-label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: #0f172a;
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .net-label input {
+            cursor: pointer;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-cancel {
+            background: #475569;
+        }
+        .btn-cancel:hover {
+            background: #334155;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR: ADMINISTRACIÓN DE CAMPAÑAS -->
+    <aside>
+        <h2>Mis Campañas</h2>
+        
+        <div class="form-group">
+            <label for="camp-name">Nombre de Campaña</label>
+            <input type="text" id="camp-name" placeholder="Ej: Black Friday">
+        </div>
+        
+        <div class="form-group">
+            <label for="camp-color">Color Identificador</label>
+            <input type="color" id="camp-color" value="#3b82f6" style="height: 40px; padding:2px; cursor:pointer;">
+        </div>
+
+        <button onclick="addCampaign()">+ Crear Campaña</button>
+
+        <hr style="border-color: var(--border-color)">
+
+        <label>Filtrar Vista por Campaña:</label>
+        <select id="filter-campaign" onchange="renderCalendar()">
+            <option value="all">👁 Mostrar Todo</option>
+        </select>
+
+        <ul class="campaign-list" id="campaigns-container">
+            <!-- Dinámico -->
+        </ul>
+    </aside>
+
+    <!-- MAIN: CALENDARIO DE CONTENIDOS -->
+    <main>
+        <div class="calendar-header">
+            <h2 id="calendar-month-year">Junio 2026</h2>
+            <div class="nav-buttons">
+                <button onclick="changeMonth(-1)">◀ Ant</button>
+                <button onclick="goToday()" class="btn-cancel">Hoy</button>
+                <button onclick="changeMonth(1)">Sig ▶</button>
+            </div>
+        </div>
+
+        <div class="grid-weekdays">
+            <div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>
+        </div>
+
+        <div class="grid-days" id="calendar-days-container">
+            <!-- Dinámico -->
+        </div>
+    </main>
+
+    <!-- MODAL: FORMULARIO DE POST PUBLICITARIO -->
+    <div class="modal-overlay" id="modal-post">
+        <div class="modal">
+            <h2 id="modal-title">Agendar Contenido</h2>
+            
+            <input type="hidden" id="post-date">
+
+            <div class="form-group">
+                <label for="post-campaign">Asignar a Campaña</label>
+                <select id="post-campaign" required>
+                    <!-- Dinámico -->
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="post-time">Hora de Publicación</label>
+                <input type="time" id="post-time" required value="12:00">
+            </div>
+
+            <div class="form-group">
+                <label for="post-desc">Descripción / Copys del Post</label>
+                <textarea id="post-desc" rows="4" placeholder="Escribe el copy o detalles de la publicación..." required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Redes Sociales de Destino</label>
+                <div class="networks-checkboxes">
+                    <label class="net-label"><input type="checkbox" value="TikTok"> TikTok</label>
+                    <label class="net-label"><input type="checkbox" value="Facebook"> Facebook</label>
+                    <label class="net-label"><input type="checkbox" value="Instagram"> Instagram</label>
+                    <label class="net-label"><input type="checkbox" value="YouTube"> YouTube</label>
+                    <label class="net-label"><input type="checkbox" value="Kick"> Kick</label>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="closeModal()">Cancelar</button>
+                <button type="button" onclick="savePost()">Guardar en Calendario</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LÓGICA DE CONTROL (JAVASCRIPT) -->
+    <script>
+        // Data local simulada inicial
+        let campaigns = JSON.parse(localStorage.getItem('mkt_campaigns')) || [
+            { id: 'c1', name: 'Contenido Orgánico Diario', color: '#10b981' },
+            { id: 'c2', name: 'Lanzamiento Colección Importados', color: '#8b5cf6' }
+        ];
+
+        let posts = JSON.parse(localStorage.getItem('mkt_posts')) || [];
+
+        // Variables de estado del calendario (usa el tiempo del sistema)
+        let currentDate = new Date();
+
+        const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+        // Inicialización
+        document.addEventListener("DOMContentLoaded", () => {
+            updateCampaignElements();
+            renderCalendar();
+        });
+
+        // Guardado Local
+        function saveToStorage() {
+            localStorage.setItem('mkt_campaigns', JSON.stringify(campaigns));
+            localStorage.setItem('mkt_posts', JSON.stringify(posts));
+        }
+
+        // --- GESTIÓN DE CAMPAÑAS ---
+        function addCampaign() {
+            const nameInput = document.getElementById('camp-name');
+            const colorInput = document.getElementById('camp-color');
+
+            if (!nameInput.value.trim()) return alert("Por favor asigna un nombre a la campaña.");
+
+            const newCampaign = {
+                id: 'c_' + Date.now(),
+                name: nameInput.value.trim(),
+                color: colorInput.value
+            };
+
+            campaigns.push(newCampaign);
+            nameInput.value = '';
+            
+            saveToStorage();
+            updateCampaignElements();
+            renderCalendar();
+        }
+
+        function updateCampaignElements() {
+            // Actualizar lista en el Sidebar
+            const container = document.getElementById('campaigns-container');
+            container.innerHTML = '';
+            
+            // Actualizar selectores del filtro y del formulario modal
+            const filterSelect = document.getElementById('filter-campaign');
+            const modalSelect = document.getElementById('post-campaign');
+            
+            filterSelect.innerHTML = '<option value="all">👁 Mostrar Todo</option>';
+            modalSelect.innerHTML = '';
+
+            campaigns.forEach(camp => {
+                // Item en la lista visual
+                const li = document.createElement('li');
+                li.className = 'campaign-item';
+                li.innerHTML = `<span class="color-dot" style="background:${camp.color}"></span> <span>${camp.name}</span>`;
+                container.appendChild(li);
+
+                // Opción en filtros
+                filterSelect.innerHTML += `<option value="${camp.id}">${camp.name}</option>`;
+                // Opción en Modal
+                modalSelect.innerHTML += `<option value="${camp.id}">${camp.name}</option>`;
+            });
+        }
+
+        // --- RENDERIZADO DEL CALENDARIO ---
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            document.getElementById('calendar-month-year').innerText = `${monthNames[month]} ${year}`;
+
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            const totalDays = new Date(year, month + 1, 0).getDate();
+
+            const daysContainer = document.getElementById('calendar-days-container');
+            daysContainer.innerHTML = '';
+
+            // Filtrado de posts activos
+            const selectedFilter = document.getElementById('filter-campaign').value;
+            const filteredPosts = posts.filter(p => selectedFilter === 'all' || p.campaignId === selectedFilter);
+
+            // Espacios vacíos del inicio del mes
+            for (let i = 0; i < firstDayIndex; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'day-cell empty';
+                daysContainer.appendChild(emptyCell);
+            }
+
+            // Construir cada celda de día funcional
+            for (let day = 1; day <= totalDays; day++) {
+                const dayCell = document.createElement('div');
+                dayCell.className = 'day-cell';
+                
+                // Formato ISO string local simple: YYYY-MM-DD
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                
+                // Verificar si es "Hoy" según sistema
+                const today = new Date();
+                if(day === today.getDate() && month === today.getMonth() && year === today.getFullYear()){
+                    dayCell.classList.add('today');
+                }
+
+                dayCell.innerHTML = `<div class="day-number">${day}</div>`;
+                
+                // Insertar publicaciones agendadas para este día específico
+                const dayPosts = filteredPosts.filter(p => p.date === dateStr);
+                // Ordenar por hora
+                dayPosts.sort((a,b) => a.time.localeCompare(b.time));
+
+                dayPosts.forEach(post => {
+                    const campData = campaigns.find(c => c.id === post.campaignId) || { color: '#666', name: 'S/C' };
+                    const postBadge = document.createElement('div');
+                    postBadge.className = 'post-badge';
+                    postBadge.style.backgroundColor = campData.color;
+                    
+                    // Une las redes en texto pequeño
+                    const nets = post.networks.length > 0 ? ` [${post.networks.join(',')}]` : '';
+                    
+                    postBadge.innerHTML = `
+                        <span class="post-time">${post.time}${nets}</span>
+                        <span class="post-title">${post.desc}</span>
+                    `;
+                    dayCell.appendChild(postBadge);
+                });
+
+                // Evento al presionar un día para agendar nuevo contenido
+                dayCell.addEventListener('click', () => openModal(dateStr));
+
+                daysContainer.appendChild(dayCell);
+            }
+        }
+
+        // Navegación del Calendario
+        function changeMonth(direction) {
+            currentDate.setMonth(currentDate.getMonth() + direction);
+            renderCalendar();
+        }
+
+        function goToday() {
+            currentDate = new Date();
+            renderCalendar();
+        }
+
+        // --- CONTROL DEL MODAL (FORMULARIO) ---
+        function openModal(dateStr) {
+            document.getElementById('post-date').value = dateStr;
+            document.getElementById('modal-title').innerText = `Agendar para: ${dateStr}`;
+            
+            // Limpiar campos por defecto
+            document.getElementById('post-desc').value = '';
+            document.getElementById('post-time').value = '12:00';
+            const checkboxes = document.querySelectorAll('.networks-checkboxes input');
+            checkboxes.forEach(cb => cb.checked = false);
+
+            if(campaigns.length === 0){
+                alert("Por favor, primero crea al menos una campaña publicitaria en el panel izquierdo.");
+                return;
+            }
+
+            document.getElementById('modal-post').classList.add('open');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-post').classList.remove('open');
+        }
+
+        function savePost() {
+            const date = document.getElementById('post-date').value;
+            const campaignId = document.getElementById('post-campaign').value;
+            const time = document.getElementById('post-time').value;
+            const desc = document.getElementById('post-desc').value.trim();
+            
+            // Recoger redes seleccionadas
+            const checkboxes = document.querySelectorAll('.networks-checkboxes input:checked');
+            const networks = Array.from(checkboxes).map(cb => cb.value);
+
+            if (!desc) return alert("Por favor escribe una descripción o copy para la pauta.");
+
+            // Crear objeto de post
+            const newPost = {
+                id: 'p_' + Date.now(),
+                date,
+                campaignId,
+                time,
+                desc,
+                networks
+            };
+
+            posts.push(newPost);
+            saveToStorage();
+            closeModal();
+            renderCalendar();
+        }
+    </script>
+</body>
+</html>
